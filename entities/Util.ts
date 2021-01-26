@@ -91,4 +91,24 @@ export class Util {
       }
       return resultArray
     }
+
+    public static downloadThumbnails = async (episodeResolvable: string | CrunchyrollEpisode, dest?: string, options?: {ffmpegPath?: string}) => {
+      if (!options) options = {}
+      if (options.ffmpegPath) ffmpeg.setFfmpegPath(options.ffmpegPath)
+      if (!dest) dest = "./"
+      let episode = null as unknown as CrunchyrollEpisode
+      if (episodeResolvable.hasOwnProperty("url")) {
+          episode = episodeResolvable as CrunchyrollEpisode
+      } else {
+          episode = await Episode.get(episodeResolvable as string)
+      }
+      const folder = `${dest}/${episode.collection_name.replace(/-/g, " ")} ${episode.episode_number}`
+      if (!fs.existsSync(folder)) fs.mkdirSync(folder, {recursive: true})
+      await new Promise<void>((resolve) => {
+          ffmpeg(episode.bif_url).save(`${folder}/thumb%d.png`)
+          .on("end", () => resolve())
+          .on("error", (err: any) => Promise.reject(err))
+      })
+      return folder as string
+    }
 }

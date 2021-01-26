@@ -40,6 +40,9 @@ async function useAPI() {
 
     /*Or you can just pass in a link.*/
     const episodeLink = await crunchyroll.episode.get("https://www.crunchyroll.com/himouto-umaru-chan/episode-11-umarus-days-682821")
+
+    /*If you have trouble getting an anime, you can also pass in an id. You can find it by inspecting the page source and looking for the group_id.*/
+    const getByID = await crunchyroll.anime.get("277840")
 }
 useAPI()
 ```
@@ -56,8 +59,11 @@ async function useAPI() {
     const audio = await crunchyroll.util.downloadEpisode("https://www.crunchyroll.com/konosuba-gods-blessing-on-this-wonderful-world/episode-10-gods-blessing-on-this-wonderful-party-727607", 
     "./audio", {audioOnly: true}, videoProgress)
 
-    /*And download a whole anime series or season.*/
+    /*You can also download a whole anime series or season (but it will take awhile...)*/
     const season = await crunchyroll.util.downloadAnime("konosuba", "./videos", {preferSub: true}, totalProgress, videoProgress)
+
+    /*Use this to download all the video thumbnails (from the bif file).*/
+    const thumbnails = await crunchyroll.util.downloadThumbnails("kancolle", "./images")
 
     /*Pass callback functions to track video progress and total progress.*/
     const videoProgress = (progress) => {
