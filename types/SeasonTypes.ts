@@ -11,8 +11,8 @@ export interface CrunchyrollSeason {
     media_type: string
     season: string
     complete: boolean
-    landscape_image: ImageSet
-    portrait_image: ImageSet
+    landscape_image?: ImageSet
+    portrait_image?: ImageSet
     availability_notes: string
     created: string
 }
