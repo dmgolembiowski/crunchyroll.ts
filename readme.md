@@ -53,7 +53,8 @@ async function useAPI() {
     const m3u8 = await crunchyroll.util.downloadEpisode("log horizon 1", "./videos", {skipConversion: true})
 
     /*Set audioOnly to true if you just want to download the audio of the episode.*/
-    const audio = await crunchyroll.util.downloadEpisode("https://www.crunchyroll.com/konosuba-gods-blessing-on-this-wonderful-world/episode-10-gods-blessing-on-this-wonderful-party-727607", "./audio", {audioOnly: true}, videoProgress)
+    const audio = await crunchyroll.util.downloadEpisode("https://www.crunchyroll.com/konosuba-gods-blessing-on-this-wonderful-world/episode-10-gods-blessing-on-this-wonderful-party-727607", 
+    "./audio", {audioOnly: true}, videoProgress)
 
     /*And download a whole anime series or season.*/
     const season = await crunchyroll.util.downloadAnime("konosuba", "./videos", {preferSub: true}, totalProgress, videoProgress)
