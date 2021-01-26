@@ -2,6 +2,7 @@ import api from "../API"
 import {CrunchyrollAnime, CrunchyrollEpisode, CrunchyrollSeason} from "../types"
 import {Episode} from "./Episode"
 import {Season} from "./Season"
+import {Util} from "./Util"
 
 const fields = "series.class,series.collection_count,series.description,series.genres,series.in_queue,series.landscape_image,series.media_count,series.media_type,series.name,series.portrait_image,series.publisher_name,series.rating,series.series_id,series.url,series.year"
 
@@ -11,21 +12,25 @@ export class Anime {
         return response.data as CrunchyrollAnime
     }
 
-    public static get = async (animeResolvable: string) => {
-        let name = animeResolvable
-        if (animeResolvable.includes("crunchyroll.com")) name = animeResolvable.replace(/https?:\/\/www.crunchyroll.com\//, "").replace(/-/g, " ")
+    public static get = async (animeResolvable: string | CrunchyrollSeason) => {
+        if (animeResolvable.hasOwnProperty("collection_id")) return Util.parseAnime(animeResolvable)
+        let name = animeResolvable as string
+        if (name.includes("crunchyroll.com")) name = name.replace(/https?:\/\/www.crunchyroll.com\//, "").replace(/-/g, " ").replace(/\//g, "")
         const search = await Anime.search(name)
-        if (!search[0]) return Promise.reject(`no result found for ${animeResolvable} (is it a season?)`)
+        if (!search[0]) return Promise.reject(`no anime found for ${name} (is it a season?)`)
         const anime = await Anime.detail(search[0])
         return anime as CrunchyrollAnime
     }
 
-    public static search = async (query: string, options?: {sort?: "featured" | "newest" | "popular" | "updated"}) => {
+    public static search = async (query: string, options?: {sort?: "featured" | "newest" | "popular" | "updated", tagSearch?: boolean}) => {
         if (!options) options = {}
-        let filter = `prefix:${query.trim()}`
+        let filter = options.tagSearch ? `tag:${query.trim()}` : `prefix:${query.trim()}`
         if (options.sort) filter += `,${options.sort}`
         const response = await api.get("list_series", {media_type: "anime", filter})
-        if (!response.data[0]) return Promise.reject(`no result found for ${query} (is it a season?)`)
+        if (!response.data[0]) {
+            if (!options.tagSearch) return Anime.search(query, {tagSearch: true})
+            return Promise.reject(`no anime results found for ${query} (is it a season?)`)
+        }
         const animeSearch = await Promise.all(response.data.map((a: CrunchyrollAnime) => Anime.detail(a)))
         return animeSearch as CrunchyrollAnime[]
     }

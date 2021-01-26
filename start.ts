@@ -1,11 +1,10 @@
 import crunchyroll from "./crunchyroll"
 
 (async () => {
-    /*
-    const progress = (progress) => {
+    /*const progress = (progress) => {
         console.log(progress.percent)
     }
-    const output = await crunchyroll.util.downloadEpisode("https://www.crunchyroll.com/anime-gataris/episode-9-the-anime-club-forever-snobs-749917", "./videos", {}, progress)*/
-    const output = await crunchyroll.anime.get("gabriel dropout")
+    const output = await crunchyroll.util.downloadEpisode("https://www.crunchyroll.com/anime-azurlane-slow-ahead/episode-3-is-real-life-a-god-tier-game-801707", "./videos", {}, progress)*/
+    const output = await crunchyroll.anime.get("https://www.crunchyroll.com/heavens-design-team/")
     console.log(output)
 })()

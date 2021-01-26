@@ -49,7 +49,7 @@ async function useAPI() {
     /*Downloads an episode. If you set the resolution it will try to find it, otherwise it will get a lower one. The quality is from 0-51 where lower is better. You can also set preferSub or preferDub to ensure that you get the one you want.*/
     const video = await crunchyroll.util.downloadEpisode("laid back camp 2", "./videos", {resolution: 720, quality: 16, preferSub: true}, videoProgress)
 
-    /*Skip the video conversion an just return the m3u8 link. It is still playable on the VLC player, for instance.*/
+    /*Skip the video conversion and just return the m3u8 link. It is still playable on the VLC player.*/
     const m3u8 = await crunchyroll.util.downloadEpisode("log horizon 1", "./videos", {skipConversion: true})
 
     /*Set audioOnly to true if you just want to download the audio of the episode.*/

@@ -27,12 +27,12 @@ export class Util {
 
     public static parseAnime = async (animeResolvable: string | CrunchyrollAnime | CrunchyrollSeason) => {
       let anime = null as unknown as CrunchyrollAnime
-      if (animeResolvable.hasOwnProperty("series_id")) {
+      if (animeResolvable.hasOwnProperty("series_id") && !animeResolvable.hasOwnProperty("collection_id")) {
           anime = animeResolvable as CrunchyrollAnime
       } else {
-          const phrases = (animeResolvable as string).split(/ +/g)
+          const phrases = animeResolvable.hasOwnProperty("collection_id") ? (animeResolvable as CrunchyrollSeason).name.split(/ +/g) : (animeResolvable as string).split(/ +/g)
           while (!anime) {
-              if (!phrases.length) return Promise.reject(`no results found for ${animeResolvable}`)
+              if (!phrases.length) return Promise.reject(`no anime found for ${animeResolvable}`)
               try {
                   anime = await Anime.get(phrases.join(" ")) as CrunchyrollAnime
               } catch {
@@ -56,7 +56,8 @@ export class Util {
       const folder = path.extname(dest) ? path.dirname(dest) : dest
       if (!fs.existsSync(folder)) fs.mkdirSync(folder, {recursive: true})
       if (!path.extname(dest)) dest += `/${episode.collection_name.replace(/-/g, " ")} ${episode.episode_number}.${options.audioOnly ? "mp3" : "mp4"}`
-      const stream = episode.stream_data.streams[0].url
+      const stream = episode.stream_data.streams[0]?.url
+      if (!stream) return Promise.reject("can't download this episode (is it premium only?)")
       const manifest = await axios.get(stream).then((r) => r.data)
       const m3u8 = Util.parsem3u8(manifest)
       let playlist = m3u8.playlists.find((p: any) => p.attributes.RESOLUTION.height === options?.resolution || 1080)
