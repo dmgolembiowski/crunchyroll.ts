@@ -27,7 +27,7 @@ async function useAPI() {
     const anime = await crunchyroll.anime.get("gabriel dropout")
     const animeLink = await crunchyroll.anime.get("https://www.crunchyroll.com/anime-gataris/")
 
-    /*For example, SAO 2 is a season of the SAO series so you have to use season.get. Set preferSub or preferDub to only get subbed and dubbed anime respectively (if you set both, you will get dubbed).*/
+    /*For example, SAO 2 is a season of the SAO series so you have to use season.get. Set preferSub or preferDub to only get subbed and dubbed anime respectively (if you set both, you will get both).*/
     const season = await crunchyroll.season.get("sword art online II", {preferDub: true})
 
     /*Both anime and season have searching methods.*/

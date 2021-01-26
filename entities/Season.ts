@@ -28,8 +28,8 @@ export class Season {
                 subs.push(response.data[i])
             }
         }
-        if (options.preferDub) return dubs as CrunchyrollSeason[]
-        if (options.preferSub) return subs as CrunchyrollSeason[]
+        if (options.preferDub && !options.preferSub) return dubs as CrunchyrollSeason[]
+        if (options.preferSub && !options.preferDub) return subs as CrunchyrollSeason[]
         return response.data as CrunchyrollSeason[]
     }
 }

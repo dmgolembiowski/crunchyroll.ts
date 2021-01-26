@@ -80,10 +80,14 @@ export class Util {
       const episodes = await Anime.episodes(animeResolvable, {preferSub: options.preferSub, preferDub: options.preferDub})
       const resultArray: string[] = []
       for (let i = 0; i < episodes.length; i++) {
-        const result = await Util.downloadEpisode(episodes[i], destFolder, options, videoProgress)
-        resultArray.push(result)
-        const stop = totalProgress ? totalProgress(i + 1, episodes.length) : false
-        if (stop) break
+        try {
+          const result = await Util.downloadEpisode(episodes[i], destFolder, options, videoProgress)
+          resultArray.push(result)
+          const stop = totalProgress ? totalProgress(i + 1, episodes.length) : false
+          if (stop) break
+        } catch {
+          continue
+        }
       }
       return resultArray
     }
