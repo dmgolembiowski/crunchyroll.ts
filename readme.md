@@ -1,6 +1,6 @@
 <div align="left">
   <p>
-    <a href="https://tenpi.github.io/crunchyroll.ts/"><img src="https://raw.githubusercontent.com/Tenpi/crunchyroll.ts/master/assets/crunchyroll.tslogo.png" width="500" /></a>
+    <a href="https://tenpi.github.io/crunchyroll.ts/"><img src="https://raw.githubusercontent.com/Tenpi/crunchyroll.ts/master/assets/crunchyroll.tslogo.png" width="800" /></a>
   </p>
   <p>
     <a href="https://nodei.co/npm/crunchyroll.ts/"><img src="https://nodei.co/npm/crunchyroll.ts.png" /></a>
@@ -66,6 +66,7 @@ async function useAPI() {
     /*Return true in this callback to stop early.*/
     const totalProgress = (current: number, total: number) => {
         console.log(`Current Episode: ${current} Total Episodes: ${total}`)
+        if (current === 3) return true
     }
 }
 ```
