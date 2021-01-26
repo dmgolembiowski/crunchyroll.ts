@@ -13,6 +13,7 @@ export interface DownloadOptions {
   audioOnly?: boolean
   preferSub?: boolean
   preferDub?: boolean
+  ffmpegPath?: string
 }
 
 export class Util {
@@ -44,6 +45,7 @@ export class Util {
 
     public static downloadEpisode = async (episodeResolvable: string | CrunchyrollEpisode, dest?: string, options?: DownloadOptions, videoProgress?: (progress: FFmpegProgress) => void) => {
       if (!options) options = {}
+      if (options.ffmpegPath) ffmpeg.setFfmpegPath(options.ffmpegPath)
       if (!dest) dest = "./"
       let episode = null as CrunchyrollEpisode | null
       if (episodeResolvable.hasOwnProperty("url")) {

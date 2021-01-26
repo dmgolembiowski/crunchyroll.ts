@@ -1,6 +1,6 @@
 <div align="left">
   <p>
-    <a href="https://tenpi.github.io/crunchyroll.ts/"><img src="https://raw.githubusercontent.com/Tenpi/crunchyroll.ts/master/assets/crunchyroll.tslogo.png" width="700" /></a>
+    <a href="https://tenpi.github.io/crunchyroll.ts/"><img src="https://raw.githubusercontent.com/Tenpi/crunchyroll.ts/master/assets/crunchyroll.tslogo.png" width="600" /></a>
   </p>
   <p>
     <a href="https://nodei.co/npm/crunchyroll.ts/"><img src="https://nodei.co/npm/crunchyroll.ts.png" /></a>
