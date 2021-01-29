@@ -33,7 +33,7 @@ export class Util {
       return anime
     }
 
-    public static downloadEpisode = async (episodeResolvable: string | CrunchyrollEpisode, dest?: string, options?: DownloadOptions, videoProgress?: (progress: FFmpegProgress, resume: () => any) => void | "pause" | "stop") => {
+    public static downloadEpisode = async (episodeResolvable: string | CrunchyrollEpisode, dest?: string, options?: DownloadOptions, videoProgress?: (progress: FFmpegProgress, resume: () => any) => void | "pause" | "stop" | "kill") => {
       if (!options) options = {}
       if (options.ffmpegPath) ffmpeg.setFfmpegPath(options.ffmpegPath)
       if (options.ffprobePath) ffmpeg.setFfprobePath(options.ffprobePath)
@@ -79,6 +79,8 @@ export class Util {
             const result = videoProgress(progress, () => util.resume(video))
             if (result === "pause") {
               util.pause(video)
+            } else if (result === "kill") {
+              video.kill()
             } else if (result === "stop") {
               try {
                 util.abort(video)
@@ -92,7 +94,7 @@ export class Util {
       return dest as string
     }
 
-    public static downloadAnime = async (animeResolvable: string | CrunchyrollAnime | CrunchyrollSeason, destFolder?: string, options?: DownloadOptions, totalProgress?: (current: number, total: number) => boolean | void, videoProgress?: (progress: FFmpegProgress, resume: () => boolean) => void | "pause" | "stop") => {
+    public static downloadAnime = async (animeResolvable: string | CrunchyrollAnime | CrunchyrollSeason, destFolder?: string, options?: DownloadOptions, totalProgress?: (current: number, total: number) => boolean | void, videoProgress?: (progress: FFmpegProgress, resume: () => boolean) => void | "pause" | "stop" | "kill") => {
       if (!options) options = {}
       const episodes = await Anime.episodes(animeResolvable, {preferSub: options.preferSub, preferDub: options.preferDub})
       const resultArray: string[] = []
