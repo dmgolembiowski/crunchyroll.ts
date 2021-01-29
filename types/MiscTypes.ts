@@ -15,6 +15,17 @@ export interface ImageSet {
   height: string
 }
 
+export interface DownloadOptions {
+  resolution?: number
+  quality?: number
+  skipConversion?: boolean
+  audioOnly?: boolean
+  preferSub?: boolean
+  preferDub?: boolean
+  ffmpegPath?: string
+  ffprobePath?: string
+}
+
 export interface FFmpegProgress {
     frames: number
     currentFps: number

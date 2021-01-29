@@ -1,21 +1,11 @@
 import axios from "axios"
 import ffmpeg from "fluent-ffmpeg"
+import * as util from "fluent-ffmpeg-util"
 import fs from "fs"
 import path from "path"
-import {CrunchyrollAnime, CrunchyrollEpisode, CrunchyrollSeason, FFmpegProgress} from "../types"
+import {CrunchyrollAnime, CrunchyrollEpisode, CrunchyrollSeason, DownloadOptions, FFmpegProgress} from "../types"
 import {Anime} from "./Anime"
 import {Episode} from "./Episode"
-
-export interface DownloadOptions {
-  resolution?: number
-  quality?: number
-  skipConversion?: boolean
-  audioOnly?: boolean
-  preferSub?: boolean
-  preferDub?: boolean
-  ffmpegPath?: string
-}
-
 export class Util {
     private static readonly parsem3u8 = (manifest: any) => {
       const m3u8Parser = require("m3u8-parser")
@@ -43,9 +33,10 @@ export class Util {
       return anime
     }
 
-    public static downloadEpisode = async (episodeResolvable: string | CrunchyrollEpisode, dest?: string, options?: DownloadOptions, videoProgress?: (progress: FFmpegProgress) => void) => {
+    public static downloadEpisode = async (episodeResolvable: string | CrunchyrollEpisode, dest?: string, options?: DownloadOptions, videoProgress?: (progress: FFmpegProgress) => void | "pause" | "resume" | "stop") => {
       if (!options) options = {}
       if (options.ffmpegPath) ffmpeg.setFfmpegPath(options.ffmpegPath)
+      if (options.ffprobePath) ffmpeg.setFfprobePath(options.ffprobePath)
       if (!dest) dest = "./"
       let episode = null as CrunchyrollEpisode | null
       if (episodeResolvable.hasOwnProperty("url")) {
@@ -66,16 +57,36 @@ export class Util {
       if (options.skipConversion) return playlist.uri as string
       let ffmpegArgs = ["-acodec", "copy", "-vcodec", "copy", "-crf", `${options?.quality || 16}`, "-pix_fmt", "yuv420p", "-movflags", "+faststart"]
       if (options.audioOnly) ffmpegArgs = []
+      const duration = await new Promise<number>((resolve) => {
+        ffmpeg.ffprobe(playlist.uri, function(err: any, metadata: any) {
+          resolve(metadata.format.duration)
+        })
+      })
       await new Promise<void>((resolve) => {
-          ffmpeg(playlist.uri).outputOptions(ffmpegArgs).save(dest)
-          .on("progress", (progress: FFmpegProgress) => {if (videoProgress) videoProgress(progress)})
-          .on("end", () => resolve())
-          .on("error", (err: any) => Promise.reject(err))
+        const video = ffmpeg(playlist.uri).outputOptions(ffmpegArgs).save(dest)
+        .on("end", () => resolve())
+        .on("error", (err: any) => resolve())
+        .on("progress", (progress: FFmpegProgress) => {
+          if (!progress.percent) {
+            const timemark = progress.timemark.split(".")[0].split(":").map((n) => Number(n)).reduce((acc, time) => (60 * acc) + +time)
+            progress.percent = (100 / duration) * timemark
+          }
+          if (videoProgress) {
+            const result = videoProgress(progress)
+            if (result === "pause") {
+              util.pause(video)
+            } else if (result === "resume") {
+              util.resume(video)
+            } else if (result === "stop") {
+              util.abort(video)
+            }
+          }
+        })
       })
       return dest as string
     }
 
-    public static downloadAnime = async (animeResolvable: string | CrunchyrollAnime | CrunchyrollSeason, destFolder?: string, options?: DownloadOptions, totalProgress?: (current: number, total: number) => boolean | void, videoProgress?: (progress: FFmpegProgress) => void) => {
+    public static downloadAnime = async (animeResolvable: string | CrunchyrollAnime | CrunchyrollSeason, destFolder?: string, options?: DownloadOptions, totalProgress?: (current: number, total: number) => boolean | void, videoProgress?: (progress: FFmpegProgress) => void | "pause" | "resume" | "stop") => {
       if (!options) options = {}
       const episodes = await Anime.episodes(animeResolvable, {preferSub: options.preferSub, preferDub: options.preferDub})
       const resultArray: string[] = []
@@ -107,7 +118,7 @@ export class Util {
       await new Promise<void>((resolve) => {
           ffmpeg(episode.bif_url).save(`${folder}/thumb%d.png`)
           .on("end", () => resolve())
-          .on("error", (err: any) => Promise.reject(err))
+          .on("error", (err: any) => resolve())
       })
       return folder as string
     }

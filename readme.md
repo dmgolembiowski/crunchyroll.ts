@@ -65,11 +65,12 @@ async function useAPI() {
     /*Use this to download all the video thumbnails (from the bif file).*/
     const thumbnails = await crunchyroll.util.downloadThumbnails("kancolle", "./images")
 
-    /*Pass callback functions to track video progress and total progress.*/
+    /*Pass callback functions to track video progress and total progress. Return pause to pause, resume to resume, and stop to stop early.*/
     const videoProgress = (progress) => {
         console.log(`Time Marker: ${progress.timemark} Percent: ${progress.percent.toFixed(2)}`)
+        if (progress.percent > 20) return "stop"
     }
-    /*Return true in this callback to stop early.*/
+    /*Return true in this callback to stop downloading episodes.*/
     const totalProgress = (current: number, total: number) => {
         console.log(`Current Episode: ${current} Total Episodes: ${total}`)
         if (current === 3) return true
