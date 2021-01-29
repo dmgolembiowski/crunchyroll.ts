@@ -65,8 +65,8 @@ async function useAPI() {
     /*Use this to download all the video thumbnails (from the bif file).*/
     const thumbnails = await crunchyroll.util.downloadThumbnails("kancolle", "./images")
 
-    /*Pass callback functions to track video progress and total progress. Return pause to pause, resume to resume, and stop to stop early.*/
-    const videoProgress = (progress) => {
+    /*Pass callback functions to track video progress and total progress. Return pause to pause and stop to stop early. Call the passed resume function to resume if paused.*/
+    const videoProgress = (progress: FFmpegProgress, resume: () => boolean) => {
         console.log(`Time Marker: ${progress.timemark} Percent: ${progress.percent.toFixed(2)}`)
         if (progress.percent > 20) return "stop"
     }

@@ -33,7 +33,7 @@ export class Util {
       return anime
     }
 
-    public static downloadEpisode = async (episodeResolvable: string | CrunchyrollEpisode, dest?: string, options?: DownloadOptions, videoProgress?: (progress: FFmpegProgress) => void | "pause" | "resume" | "stop") => {
+    public static downloadEpisode = async (episodeResolvable: string | CrunchyrollEpisode, dest?: string, options?: DownloadOptions, videoProgress?: (progress: FFmpegProgress, resume: () => any) => void | "pause" | "stop") => {
       if (!options) options = {}
       if (options.ffmpegPath) ffmpeg.setFfmpegPath(options.ffmpegPath)
       if (options.ffprobePath) ffmpeg.setFfprobePath(options.ffprobePath)
@@ -43,6 +43,10 @@ export class Util {
           episode = episodeResolvable as CrunchyrollEpisode
       } else {
           episode = await Episode.get(episodeResolvable as string, {preferSub: options.preferSub, preferDub: options.preferDub})
+      }
+      if (!path.isAbsolute(dest)) {
+        const local = __dirname.includes("node_modules") ? path.join(__dirname, "../../../../") : path.join(__dirname, "../../")
+        dest = path.join(local, dest)
       }
       const folder = path.extname(dest) ? path.dirname(dest) : dest
       if (!fs.existsSync(folder)) fs.mkdirSync(folder, {recursive: true})
@@ -72,13 +76,15 @@ export class Util {
             progress.percent = (100 / duration) * timemark
           }
           if (videoProgress) {
-            const result = videoProgress(progress)
+            const result = videoProgress(progress, () => util.resume(video))
             if (result === "pause") {
               util.pause(video)
-            } else if (result === "resume") {
-              util.resume(video)
             } else if (result === "stop") {
-              util.abort(video)
+              try {
+                util.abort(video)
+              } catch {
+                // ignore
+              }
             }
           }
         })
@@ -86,7 +92,7 @@ export class Util {
       return dest as string
     }
 
-    public static downloadAnime = async (animeResolvable: string | CrunchyrollAnime | CrunchyrollSeason, destFolder?: string, options?: DownloadOptions, totalProgress?: (current: number, total: number) => boolean | void, videoProgress?: (progress: FFmpegProgress) => void | "pause" | "resume" | "stop") => {
+    public static downloadAnime = async (animeResolvable: string | CrunchyrollAnime | CrunchyrollSeason, destFolder?: string, options?: DownloadOptions, totalProgress?: (current: number, total: number) => boolean | void, videoProgress?: (progress: FFmpegProgress, resume: () => boolean) => void | "pause" | "stop") => {
       if (!options) options = {}
       const episodes = await Anime.episodes(animeResolvable, {preferSub: options.preferSub, preferDub: options.preferDub})
       const resultArray: string[] = []
@@ -107,6 +113,10 @@ export class Util {
       if (!options) options = {}
       if (options.ffmpegPath) ffmpeg.setFfmpegPath(options.ffmpegPath)
       if (!dest) dest = "./"
+      if (!path.isAbsolute(dest)) {
+        const local = __dirname.includes("node_modules") ? path.join(__dirname, "../../../../") : path.join(__dirname, "../../")
+        dest = path.join(local, dest)
+      }
       let episode = null as unknown as CrunchyrollEpisode
       if (episodeResolvable.hasOwnProperty("url")) {
           episode = episodeResolvable as CrunchyrollEpisode
