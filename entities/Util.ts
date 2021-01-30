@@ -71,6 +71,7 @@ export class Util {
         .on("end", () => resolve())
         .on("error", (err: any) => resolve())
         .on("progress", (progress: FFmpegProgress) => {
+          if (options?.id) progress = {...progress, id: options.id}
           if (!progress.percent) {
             const timemark = progress.timemark.split(".")[0].split(":").map((n) => Number(n)).reduce((acc, time) => (60 * acc) + +time)
             progress.percent = (100 / duration) * timemark

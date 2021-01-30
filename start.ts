@@ -2,9 +2,9 @@ import crunchyroll from "./crunchyroll"
 
 (async () => {
     const progress = (progress, resume) => {
-        console.log(progress.percent)
-        if (progress.percent > 2) return "pause"
+        console.log(progress.id)
+        if (progress.percent > 2) return "stop"
     }
-    const output = await crunchyroll.util.downloadEpisode("gabriel dropout 2", "./videos", {}, progress)
-    console.log(output)
+    crunchyroll.util.downloadEpisode("gabriel dropout 2", "./videos", {id: 1}, progress)
+    crunchyroll.util.downloadEpisode("gabriel dropout 3", "./videos", {id: 2}, progress)
 })()
