@@ -1,8 +1,8 @@
 import axios from "axios"
-import ffmpeg from "fluent-ffmpeg"
-import * as util from "fluent-ffmpeg-util"
+import {ffmpeg, setFFmpegPath, setFFprobePath} from "eloquent-ffmpeg"
 import fs from "fs"
 import path from "path"
+import which from "which"
 import {CrunchyrollAnime, CrunchyrollEpisode, CrunchyrollSeason, DownloadOptions, FFmpegProgress} from "../types"
 import {Anime} from "./Anime"
 import {Episode} from "./Episode"
@@ -35,8 +35,16 @@ export class Util {
 
     public static downloadEpisode = async (episodeResolvable: string | CrunchyrollEpisode, dest?: string, options?: DownloadOptions, videoProgress?: (progress: FFmpegProgress, resume: () => any) => void | "pause" | "stop" | "kill") => {
       if (!options) options = {}
-      if (options.ffmpegPath) ffmpeg.setFfmpegPath(options.ffmpegPath)
-      if (options.ffprobePath) ffmpeg.setFfprobePath(options.ffprobePath)
+      if (options.ffmpegPath) {
+        setFFmpegPath(options.ffmpegPath)
+      } else {
+        setFFmpegPath(which.sync("ffmpeg"))
+      }
+      if (options.ffprobePath) {
+        setFFprobePath(options.ffprobePath)
+      } else {
+        setFFprobePath(which.sync("ffprobe"))
+      }
       if (!dest) dest = "./"
       let episode = null as CrunchyrollEpisode | null
       if (episodeResolvable.hasOwnProperty("url")) {
@@ -61,38 +69,31 @@ export class Util {
       if (options.skipConversion) return playlist.uri as string
       let ffmpegArgs = ["-acodec", "copy", "-vcodec", "copy", "-crf", `${options?.quality || 16}`, "-pix_fmt", "yuv420p", "-movflags", "+faststart"]
       if (options.audioOnly) ffmpegArgs = []
-      const duration = await new Promise<number>((resolve) => {
-        ffmpeg.ffprobe(playlist.uri, function(err: any, metadata: any) {
-          resolve(metadata.format.duration)
-        })
-      })
-      await new Promise<void>((resolve) => {
-        const video = ffmpeg(playlist.uri).outputOptions(ffmpegArgs).save(dest)
-        .on("end", () => resolve())
-        .on("error", (err: any) => resolve())
-        .on("progress", (progress: FFmpegProgress) => {
-          if (options?.id) progress = {...progress, id: options.id}
-          if (!progress.percent) {
-            const timemark = progress.timemark.split(".")[0].split(":").map((n) => Number(n)).reduce((acc, time) => (60 * acc) + +time)
-            progress.percent = (100 / duration) * timemark
+      const video = ffmpeg()
+      const input = video.input(playlist.uri)
+      const info = await input.probe()
+      video.output(dest).args(...ffmpegArgs)
+      const process = await video.spawn()
+      let killed = false
+      if (videoProgress) {
+        for await (const progress of process.progress()) {
+          const percent = progress.time / info.duration * 100
+          const result = videoProgress({...progress, percent}, () => process.resume())
+          if (result === "pause") {
+            process.pause()
+          } else if (result === "kill") {
+            killed = true
+            process.kill("SIGINT")
+          } else if (result === "stop") {
+            await process.abort().catch(() => null)
           }
-          if (videoProgress) {
-            const result = videoProgress(progress, () => util.resume(video))
-            if (result === "pause") {
-              util.pause(video)
-            } else if (result === "kill") {
-              video.kill()
-            } else if (result === "stop") {
-              try {
-                util.abort(video)
-              } catch {
-                // ignore
-              }
-            }
-          }
-        })
-        if (options?.run) video.run()
-      })
+        }
+      }
+      try {
+        await process.complete()
+      } catch (err) {
+        if (!killed) return Promise.reject(err)
+      }
       return dest as string
     }
 
@@ -115,7 +116,11 @@ export class Util {
 
     public static downloadThumbnails = async (episodeResolvable: string | CrunchyrollEpisode, dest?: string, options?: {ffmpegPath?: string}) => {
       if (!options) options = {}
-      if (options.ffmpegPath) ffmpeg.setFfmpegPath(options.ffmpegPath)
+      if (options.ffmpegPath) {
+        setFFmpegPath(options.ffmpegPath)
+      } else {
+        setFFmpegPath(which.sync("ffmpeg"))
+      }
       if (!dest) dest = "./"
       if (!path.isAbsolute(dest)) {
         const local = __dirname.includes("node_modules") ? path.join(__dirname, "../../../../") : path.join(__dirname, "../../")
@@ -129,11 +134,11 @@ export class Util {
       }
       const folder = `${dest}/${episode.collection_name.replace(/-/g, " ")} ${episode.episode_number}`
       if (!fs.existsSync(folder)) fs.mkdirSync(folder, {recursive: true})
-      await new Promise<void>((resolve) => {
-          ffmpeg(episode.bif_url).save(`${folder}/thumb%d.png`)
-          .on("end", () => resolve())
-          .on("error", (err: any) => resolve())
-      })
+      const video = ffmpeg()
+      video.input(episode.bif_url)
+      video.output(`${folder}/thumb%d.png`)
+      const process = await video.spawn()
+      await process.complete()
       return folder as string
     }
 }

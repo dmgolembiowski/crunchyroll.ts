@@ -16,8 +16,6 @@ export interface ImageSet {
 }
 
 export interface DownloadOptions {
-  id?: number
-  run?: boolean
   resolution?: number
   quality?: number
   skipConversion?: boolean
@@ -29,12 +27,14 @@ export interface DownloadOptions {
 }
 
 export interface FFmpegProgress {
-    id?: number
+    bitrate: number
+    bytes: number
+    fps: number
     frames: number
-    currentFps: number
-    currentKbps: number
-    targetSize: number
-    timemark: string
+    framesDropped: number
+    framesDuped: number
+    speed: number
+    time: number
     percent: number
 }
 
