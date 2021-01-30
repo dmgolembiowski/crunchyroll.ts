@@ -17,6 +17,7 @@ export interface ImageSet {
 
 export interface DownloadOptions {
   id?: number
+  run?: boolean
   resolution?: number
   quality?: number
   skipConversion?: boolean

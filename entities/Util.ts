@@ -91,6 +91,7 @@ export class Util {
             }
           }
         })
+        if (options?.run) video.run()
       })
       return dest as string
     }
