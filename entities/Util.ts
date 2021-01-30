@@ -83,7 +83,7 @@ export class Util {
             process.pause()
           } else if (result === "kill") {
             killed = true
-            process.kill("SIGINT")
+            process.kill("SIGKILL")
           } else if (result === "stop") {
             await process.abort().catch(() => null)
           }
