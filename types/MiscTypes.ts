@@ -1,5 +1,5 @@
 import {CrunchyrollAnime, CrunchyrollEpisode, CrunchyrollSeason} from "./index"
-export type Language = "enUS" | "enGB" | "esLA" | "esES" | "ptBR" | "ptPT" | "frFR" | "deDE" | "itIT" | "ruRU"
+export type Language = "jaJP" | "enUS" | "enGB" | "esLA" | "esES" | "ptBR" | "ptPT" | "frFR" | "deDE" | "itIT" | "ruRU"
 
 export interface ImageSet {
   thumb_url: string
@@ -36,6 +36,7 @@ export interface FFmpegProgress {
     speed: number
     time: number
     percent: number
+    resolution: number
 }
 
 export interface Locale {

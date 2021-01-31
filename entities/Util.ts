@@ -66,6 +66,7 @@ export class Util {
       let playlist = m3u8.playlists.find((p: any) => p.attributes.RESOLUTION.height === options?.resolution || 1080)
       if (!playlist) playlist = m3u8.playlists.find((p: any) => p.attributes.RESOLUTION.height === 720)
       if (!playlist) playlist = m3u8.playlists.find((p: any) => p.attributes.RESOLUTION.height === 480)
+      const resolution = playlist.attributes.RESOLUTION.height
       if (options.skipConversion) return playlist.uri as string
       let ffmpegArgs = ["-acodec", "copy", "-vcodec", "copy", "-crf", `${options?.quality || 16}`, "-pix_fmt", "yuv420p", "-movflags", "+faststart"]
       if (options.audioOnly) ffmpegArgs = []
@@ -78,7 +79,7 @@ export class Util {
       if (videoProgress) {
         for await (const progress of process.progress()) {
           const percent = progress.time / info.duration * 100
-          const result = videoProgress({...progress, percent}, () => process.resume())
+          const result = videoProgress({...progress, percent, resolution}, () => process.resume())
           if (result === "pause") {
             process.pause()
           } else if (result === "kill") {

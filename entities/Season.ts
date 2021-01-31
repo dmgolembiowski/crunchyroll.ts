@@ -28,7 +28,8 @@ export class Season {
                 subs.push(response.data[i])
             }
         }
-        if (options.preferDub && !options.preferSub) return dubs as CrunchyrollSeason[]
+        const englishDubs = dubs.filter((d) => d.name.toLowerCase().includes("english"))
+        if (options.preferDub && !options.preferSub) return englishDubs[0] ? englishDubs : dubs as CrunchyrollSeason[]
         if (options.preferSub && !options.preferDub) return subs as CrunchyrollSeason[]
         return response.data as CrunchyrollSeason[]
     }
