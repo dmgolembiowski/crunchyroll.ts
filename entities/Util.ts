@@ -45,6 +45,24 @@ export class Util {
       return anime
     }
 
+    private static readonly findQuality = async (episode: CrunchyrollEpisode, quality?: number) => {
+      if (!quality) quality = 1080
+      const found: any[] = []
+      for (let i = 0; i < episode.stream_data.streams.length; i++) {
+        const stream = episode.stream_data.streams[i].url
+        const manifest = await axios.get(stream).then((r) => r.data)
+        const m3u8 = Util.parsem3u8(manifest)
+        let playlist = m3u8.playlists.find((p: any) => p.attributes.RESOLUTION.height === quality)
+        if (!playlist && quality >= 720) playlist = m3u8.playlists.find((p: any) => p.attributes.RESOLUTION.height === 720)
+        if (!playlist && quality >= 480) playlist = m3u8.playlists.find((p: any) => p.attributes.RESOLUTION.height === 480)
+        if (!playlist && quality >= 360) playlist = m3u8.playlists.find((p: any) => p.attributes.RESOLUTION.height === 360)
+        if (!playlist && quality >= 240) playlist = m3u8.playlists.find((p: any) => p.attributes.RESOLUTION.height === 240)
+        if (playlist) found.push(playlist)
+      }
+      if (!found[0]) return null
+      return found.reduce((prev, curr) => curr.attributes.RESOLUTION.height > prev.attributes.RESOLUTION.height ? curr : prev)
+    }
+
     public static downloadEpisode = async (episodeResolvable: string | CrunchyrollEpisode, dest?: string, options?: DownloadOptions, videoProgress?: (progress: FFmpegProgress, resume: () => any) => void | "pause" | "stop" | "kill") => {
       if (!options) options = {}
       if (options.ffmpegPath) {
@@ -71,13 +89,8 @@ export class Util {
       const folder = path.extname(dest) ? path.dirname(dest) : dest
       if (!fs.existsSync(folder)) fs.mkdirSync(folder, {recursive: true})
       if (!path.extname(dest)) dest += `/${episode.collection_name.replace(/-/g, " ")} ${episode.episode_number}.${options.audioOnly ? "mp3" : "mp4"}`
-      const stream = episode.stream_data.streams[0]?.url
-      if (!stream) return Promise.reject("can't download this episode (is it premium only?)")
-      const manifest = await axios.get(stream).then((r) => r.data)
-      const m3u8 = Util.parsem3u8(manifest)
-      let playlist = m3u8.playlists.find((p: any) => p.attributes.RESOLUTION.height === options?.resolution || 1080)
-      if (!playlist) playlist = m3u8.playlists.find((p: any) => p.attributes.RESOLUTION.height === 720)
-      if (!playlist) playlist = m3u8.playlists.find((p: any) => p.attributes.RESOLUTION.height === 480)
+      const playlist = await Util.findQuality(episode, options.resolution)
+      if (!playlist) return Promise.reject("can't download this episode (is it premium only?)")
       const resolution = playlist.attributes.RESOLUTION.height
       if (options.skipConversion) return playlist.uri as string
       let ffmpegArgs = ["-acodec", "copy", "-vcodec", "copy", "-crf", `${options?.quality || 16}`, "-pix_fmt", "yuv420p", "-movflags", "+faststart"]
