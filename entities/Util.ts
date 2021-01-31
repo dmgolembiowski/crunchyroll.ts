@@ -15,6 +15,18 @@ export class Util {
       return parser.manifest
     }
 
+    public static formatMS = (ms: number) => {
+      const sec = ms / 1000
+      const hours = parseInt(String(Math.floor(sec / 3600)), 10)
+      const minutes = parseInt(String(Math.floor(sec / 60) % 60), 10)
+      const seconds = parseInt(String(sec % 60), 10)
+      const str = [hours, minutes, seconds]
+          .map((v) => v < 10 ? "0" + v : v)
+          .filter((v, i) => v !== "00" || i > 0)
+          .join(":")
+      return str.startsWith("0") ? str.slice(1) : str
+    }
+
     public static parseAnime = async (animeResolvable: string | CrunchyrollAnime | CrunchyrollSeason) => {
       let anime = null as unknown as CrunchyrollAnime
       if (animeResolvable.hasOwnProperty("series_id") && !animeResolvable.hasOwnProperty("collection_id")) {
@@ -79,7 +91,7 @@ export class Util {
       if (videoProgress) {
         for await (const progress of process.progress()) {
           const percent = progress.time / info.duration * 100
-          const result = videoProgress({...progress, percent, resolution}, () => process.resume())
+          const result = videoProgress({...progress, percent, resolution, duration: info.duration}, () => process.resume())
           if (result === "pause") {
             process.pause()
           } else if (result === "kill") {

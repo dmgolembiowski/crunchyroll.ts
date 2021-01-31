@@ -37,6 +37,7 @@ export interface FFmpegProgress {
     time: number
     percent: number
     resolution: number
+    duration: number
 }
 
 export interface Locale {
