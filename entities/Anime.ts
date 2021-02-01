@@ -68,7 +68,8 @@ export class Anime {
             params.series_id = (animeResolvable as CrunchyrollAnime).series_id
             anime = animeResolvable as CrunchyrollSeason
         } else {
-            anime = await Season.get(animeResolvable as string, options) as CrunchyrollSeason
+            const idSearch = await Anime.id(animeResolvable as string) as unknown as CrunchyrollSeason
+            anime = idSearch ? idSearch : await Season.get(animeResolvable as string, options) as CrunchyrollSeason
             if (anime.collection_id) params.collection_id = anime.collection_id
             if (!anime.collection_id && anime.series_id) params.series_id = anime.series_id
         }
