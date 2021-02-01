@@ -61,12 +61,12 @@ export class Anime {
     public static episodes = async (animeResolvable: string | CrunchyrollAnime | CrunchyrollSeason, options?: {preferSub?: boolean, preferDub?: boolean}) => {
         const params = {} as any
         let anime = null as unknown as CrunchyrollSeason
-        if (animeResolvable.hasOwnProperty("series_id")) {
-            params.series_id = (animeResolvable as CrunchyrollAnime).series_id
-            anime = animeResolvable as CrunchyrollSeason
-        } else if (animeResolvable.hasOwnProperty("collection_id")) {
+        if (animeResolvable.hasOwnProperty("collection_id")) {
             params.collection_id = (animeResolvable as CrunchyrollSeason).collection_id
             params.series_id = undefined
+        } else if (animeResolvable.hasOwnProperty("series_id")) {
+            params.series_id = (animeResolvable as CrunchyrollAnime).series_id
+            anime = animeResolvable as CrunchyrollSeason
         } else {
             anime = await Season.get(animeResolvable as string, options) as CrunchyrollSeason
             if (anime.collection_id) params.collection_id = anime.collection_id

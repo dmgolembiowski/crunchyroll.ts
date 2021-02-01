@@ -4,6 +4,7 @@ import crunchyroll from "./crunchyroll"
     const progress = (progress) => {
         console.log(progress.resolution)
     }
-    const output = await crunchyroll.util.downloadEpisode("konosuba 1", "./videos", {preferDub: true}, progress)
-    console.log(output)
+    const season = await crunchyroll.season.get("konosuba", {preferSub: true})
+    const output = await crunchyroll.anime.episodes(season)
+    console.log(output.map((e) => e.collection_name))
 })()
