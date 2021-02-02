@@ -71,10 +71,9 @@ async function useAPI() {
         console.log(`Time Marker: ${progress.timemark} Percent: ${progress.percent.toFixed(2)}`)
         if (progress.percent > 20) return "stop"
     }
-    /*Return true in this callback to stop downloading episodes.*/
+    /*You cannot stop this callback as it runs in parallel.*/
     const totalProgress = (current: number, total: number) => {
         console.log(`Current Episode: ${current} Total Episodes: ${total}`)
-        if (current === 3) return true
     }
 }
 ```

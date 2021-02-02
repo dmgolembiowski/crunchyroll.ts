@@ -63,6 +63,19 @@ export class Util {
       return found.reduce((prev, curr) => curr.attributes.RESOLUTION.height > prev.attributes.RESOLUTION.height ? curr : prev)
     }
 
+    public static parseDest = (episode: CrunchyrollEpisode, format: string, dest?: string) => {
+      if (!dest) dest = "./"
+      if (!path.isAbsolute(dest)) {
+        const local = __dirname.includes("node_modules") ? path.join(__dirname, "../../../../") : path.join(__dirname, "../../")
+        dest = path.join(local, dest)
+      }
+      if (format === "png") {
+        return `${dest}/${episode.collection_name.replace(/-/g, " ").replace(/:/g, "")} ${episode.episode_number}`
+      }
+      if (!path.extname(dest)) dest += `/${episode.collection_name.replace(/-/g, " ").replace(/:/g, "")} ${episode.episode_number}.${format}`
+      return dest
+    }
+
     public static downloadEpisode = async (episodeResolvable: string | CrunchyrollEpisode, dest?: string, options?: DownloadOptions, videoProgress?: (progress: FFmpegProgress, resume: () => any) => void | "pause" | "stop" | "kill") => {
       if (!options) options = {}
       if (options.ffmpegPath) {
@@ -75,20 +88,18 @@ export class Util {
       } else {
         setFFprobePath(which.sync("ffprobe"))
       }
-      if (!dest) dest = "./"
       let episode = null as CrunchyrollEpisode | null
       if (episodeResolvable.hasOwnProperty("url")) {
           episode = episodeResolvable as CrunchyrollEpisode
       } else {
           episode = await Episode.get(episodeResolvable as string, {preferSub: options.preferSub, preferDub: options.preferDub})
       }
-      if (!path.isAbsolute(dest)) {
-        const local = __dirname.includes("node_modules") ? path.join(__dirname, "../../../../") : path.join(__dirname, "../../")
-        dest = path.join(local, dest)
-      }
-      const folder = path.extname(dest) ? path.dirname(dest) : dest
+      let format = "mp4"
+      if (options.audioOnly) format = "mp3"
+      if (options.skipConversion) format = "m3u8"
+      dest = Util.parseDest(episode, format, dest)
+      const folder = path.dirname(dest)
       if (!fs.existsSync(folder)) fs.mkdirSync(folder, {recursive: true})
-      if (!path.extname(dest)) dest += `/${episode.collection_name.replace(/-/g, " ")} ${episode.episode_number}.${options.audioOnly ? "mp3" : "mp4"}`
       const playlist = await Util.findQuality(episode, options.resolution)
       if (!playlist) return Promise.reject("can't download this episode (is it premium only?)")
       const resolution = playlist.attributes.RESOLUTION.height
@@ -147,18 +158,13 @@ export class Util {
       } else {
         setFFmpegPath(which.sync("ffmpeg"))
       }
-      if (!dest) dest = "./"
-      if (!path.isAbsolute(dest)) {
-        const local = __dirname.includes("node_modules") ? path.join(__dirname, "../../../../") : path.join(__dirname, "../../")
-        dest = path.join(local, dest)
-      }
       let episode = null as unknown as CrunchyrollEpisode
       if (episodeResolvable.hasOwnProperty("url")) {
           episode = episodeResolvable as CrunchyrollEpisode
       } else {
           episode = await Episode.get(episodeResolvable as string)
       }
-      const folder = `${dest}/${episode.collection_name.replace(/-/g, " ")} ${episode.episode_number}`
+      const folder = Util.parseDest(episode, "png", dest)
       if (!fs.existsSync(folder)) fs.mkdirSync(folder, {recursive: true})
       const video = ffmpeg()
       video.input(episode.bif_url)

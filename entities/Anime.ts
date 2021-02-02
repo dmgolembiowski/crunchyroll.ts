@@ -68,8 +68,10 @@ export class Anime {
             params.series_id = (animeResolvable as CrunchyrollAnime).series_id
             anime = animeResolvable as CrunchyrollSeason
         } else {
-            const idSearch = await Anime.id(animeResolvable as string) as unknown as CrunchyrollSeason
-            anime = idSearch ? idSearch : await Season.get(animeResolvable as string, options) as CrunchyrollSeason
+            let name = animeResolvable as string
+            if (name.includes("crunchyroll.com")) name = name.replace(/https?:\/\/www.crunchyroll.com\//, "").replace(/-/g, " ").replace(/\//g, "")
+            const idSearch = await Anime.id(name) as unknown as CrunchyrollSeason
+            anime = idSearch ? idSearch : await Season.get(name, options) as CrunchyrollSeason
             if (anime.collection_id) params.collection_id = anime.collection_id
             if (!anime.collection_id && anime.series_id) params.series_id = anime.series_id
         }
