@@ -18,6 +18,7 @@ export class Anime {
         if (seriesId) return Anime.detail(seriesId)
         let id = 0
         if (/kiniro mosaic/i.test(query)) id = 255553
+        if (/dragon maid/i.test(query)) id = 272199
         if (/laid back camp/i.test(query)) id = 275163
         if (/himouto umaru chan/i.test(query)) id = 266785
         if (/food wars shokugeki no soma/i.test(query)) id = 265649
@@ -70,17 +71,15 @@ export class Anime {
         } else {
             let name = animeResolvable as string
             if (name.includes("crunchyroll.com")) name = name.replace(/https?:\/\/www.crunchyroll.com\//, "").replace(/-/g, " ").replace(/\//g, "")
-            const idSearch = await Anime.id(name) as unknown as CrunchyrollSeason
-            anime = idSearch ? idSearch : await Season.get(name, options) as CrunchyrollSeason
+            const idSearch = await Anime.id(name) as unknown as CrunchyrollAnime
+            anime = idSearch ? await Season.get(idSearch, options) : await Season.get(name, options) as CrunchyrollSeason
             if (anime.collection_id) params.collection_id = anime.collection_id
             if (!anime.collection_id && anime.series_id) params.series_id = anime.series_id
         }
         const response = await api.get("list_media", params)
-        const episodes: CrunchyrollEpisode[] = []
-        for (let i = 0; i < response.data.length; i++) {
-            episodes.push(await Episode.get(response.data[i].media_id))
-        }
+        let episodes: CrunchyrollEpisode[] = response.data
         if (!episodes[0]) return Promise.reject(`no episodes found for ${anime.name}`)
+        episodes = await Promise.all(episodes.map((e) => Episode.get(e.media_id)))
         return episodes as CrunchyrollEpisode[]
     }
 }
