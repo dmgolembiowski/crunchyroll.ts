@@ -26,6 +26,7 @@ export default class Crunchyroll {
         form.append("auth", api.auth())
         form.append("session_id", await api.session())
         const response = await api.post("logout", form, {headers: form.getHeaders()})
+        api.init()
         return response as {error: boolean, code: string}
     }
 

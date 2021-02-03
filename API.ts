@@ -8,6 +8,11 @@ export default class API {
     private static sessionID = ""
     private static authToken = ""
 
+    public static init = () => {
+        API.authToken = ""
+        API.sessionID = ""
+    }
+
     public static auth = (authToken?: string) => {
         if (authToken) API.authToken = authToken
         return API.authToken
