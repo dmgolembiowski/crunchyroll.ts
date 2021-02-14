@@ -31,8 +31,12 @@ export class Season {
         const lang = options.language ? options.language : "enUS"
         let englishDubs = dubs.filter((d) => d.name.toLowerCase().includes(Util.parseLocale(lang).toLowerCase()))
         if (!englishDubs[0] && lang === "enUS") englishDubs = dubs
-        if ((options.preferSub || lang === "jaJP") && !options.preferDub) return subs as CrunchyrollSeason[]
+        if (lang === "jaJP") {
+            options.preferDub = false
+            options.preferSub = true
+        }
         if (options.preferDub && !options.preferSub) return englishDubs as CrunchyrollSeason[]
+        if (options.preferSub && !options.preferDub) return subs as CrunchyrollSeason[]
         return response.data as CrunchyrollSeason[]
     }
 }

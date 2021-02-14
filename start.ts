@@ -4,7 +4,6 @@ import crunchyroll from "./crunchyroll"
     const progress = (progress) => {
         if (progress.percent > 10) return "stop"
     }
-    // const output = await crunchyroll.util.downloadEpisode("dragon maid 4", "./videos", {preferSub: true}, progress)
-    const output = await crunchyroll.episode.get("konosuba 4", {preferDub: true, language: "enUS"})
+    const output = await crunchyroll.episode.get("gabriel dropout 2", {preferDub: true, language: "jaJP"})
     console.log(output)
 })()

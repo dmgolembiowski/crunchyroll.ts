@@ -75,6 +75,7 @@ export class Util {
       for (let i = 0; i < streams.length; i++) {
         const manifest = await axios.get(streams[i]).then((r) => r.data)
         const m3u8 = Util.parsem3u8(manifest)
+        if (!m3u8.playlists) return m3u8
         let playlist = m3u8.playlists.find((p: any) => p.attributes.RESOLUTION.height === quality)
         if (!playlist && quality >= 720) playlist = m3u8.playlists.find((p: any) => p.attributes.RESOLUTION.height === 720)
         if (!playlist && quality >= 480) playlist = m3u8.playlists.find((p: any) => p.attributes.RESOLUTION.height === 480)
@@ -125,12 +126,13 @@ export class Util {
       if (!fs.existsSync(folder)) fs.mkdirSync(folder, {recursive: true})
       const playlist = await Util.findQuality(episode, options.resolution, options.playlist)
       if (!playlist) return Promise.reject("can't download this episode (is it premium only?)")
-      const resolution = playlist.attributes.RESOLUTION.height
-      if (options.skipConversion) return playlist.uri as string
+      const uri = playlist.uri ? playlist.uri : options.playlist
+      const resolution = playlist.attributes?.RESOLUTION.height ?? 720
+      if (options.skipConversion) return uri as string
       let ffmpegArgs = ["-acodec", "copy", "-vcodec", "copy", "-crf", `${options?.quality || 16}`, "-pix_fmt", "yuv420p", "-movflags", "+faststart"]
       if (options.audioOnly) ffmpegArgs = []
       const video = ffmpeg()
-      const input = video.input(playlist.uri)
+      const input = video.input(uri)
       const info = await input.probe()
       video.output(dest).args(...ffmpegArgs)
       const process = await video.spawn()
