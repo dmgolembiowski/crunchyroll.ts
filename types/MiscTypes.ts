@@ -24,6 +24,8 @@ export interface DownloadOptions {
   preferDub?: boolean
   ffmpegPath?: string
   ffprobePath?: string
+  playlist?: string
+  language?: Language
 }
 
 export interface FFmpegProgress {

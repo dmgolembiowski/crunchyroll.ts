@@ -1,5 +1,5 @@
 import api from "../API"
-import {CrunchyrollAnime, CrunchyrollEpisode, CrunchyrollSeason} from "../types"
+import {CrunchyrollAnime, CrunchyrollEpisode, CrunchyrollSeason, Language} from "../types"
 import {Episode} from "./Episode"
 import {Season} from "./Season"
 import {Util} from "./Util"
@@ -59,7 +59,7 @@ export class Anime {
         return animeSearch as CrunchyrollAnime[]
     }
 
-    public static episodes = async (animeResolvable: string | CrunchyrollAnime | CrunchyrollSeason, options?: {preferSub?: boolean, preferDub?: boolean}) => {
+    public static episodes = async (animeResolvable: string | CrunchyrollAnime | CrunchyrollSeason, options?: {preferSub?: boolean, preferDub?: boolean, language?: Language}) => {
         const params = {} as any
         let anime = null as unknown as CrunchyrollSeason
         if (animeResolvable.hasOwnProperty("collection_id")) {

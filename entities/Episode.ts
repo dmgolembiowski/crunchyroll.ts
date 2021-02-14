@@ -1,11 +1,11 @@
 import api from "../API"
-import {CrunchyrollEpisode, RecentlyWatchedEntry} from "../types"
+import {CrunchyrollEpisode, Language, RecentlyWatchedEntry} from "../types"
 import {Anime} from "./Anime"
 
 const fields = "media.availability_notes,media.available,media.available_time,media.bif_url,media.class,media.clip,media.created,media.duration,media.media_id,media.collection_id,media.collection_name,media.series_id,media.episode_number,media.name,media.series_name,media.description,media.premium_only,media.premium_available,media.premium_available_time,media.premium_unavailable_time,media.screenshot_image,media.url,media.stream_data,media.free_available,media.free_available_time,media.free_unavailable_time,media.unavailable_time,media.media_type,media.playhead"
 
 export class Episode {
-    public static get = async (url: string, options?: {preferSub?: boolean, preferDub?: boolean}) => {
+    public static get = async (url: string, options?: {preferSub?: boolean, preferDub?: boolean, language?: Language}) => {
         const mediaId = Number(url.match(/\d{5,}/)?.[0])
         if (mediaId) {
             const response = await api.get("info", {fields, media_id: mediaId})

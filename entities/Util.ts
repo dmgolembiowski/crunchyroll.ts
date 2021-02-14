@@ -45,12 +45,35 @@ export class Util {
       return anime
     }
 
-    private static readonly findQuality = async (episode: CrunchyrollEpisode, quality?: number) => {
+    public static parseLocale = (locale: string) => {
+      if (locale === "jaJP") return "Japanese"
+      if (locale === "enUS") return "English"
+      if (locale === "enGB") return "English"
+      if (locale === "esES") return "Spanish"
+      if (locale === "esLA") return "Spanish"
+      if (locale === "frFR") return "French"
+      if (locale === "deDE") return "German"
+      if (locale === "itIT") return "Italian"
+      if (locale === "ruRU") return "Russian"
+      if (locale === "ptBR") return "Portuguese"
+      if (locale === "ptPT") return "Portuguese"
+      if (locale.toLowerCase() === "japanese") return "jaJP"
+      if (locale.toLowerCase() === "english") return "enUS"
+      if (locale.toLowerCase() === "spanish") return "esES"
+      if (locale.toLowerCase() === "french") return "frFR"
+      if (locale.toLowerCase() === "german") return "deDE"
+      if (locale.toLowerCase() === "italian") return "itIT"
+      if (locale.toLowerCase() === "russian") return "ruRU"
+      if (locale.toLowerCase() === "portuguese") return "ptPT"
+      return "None"
+    }
+
+    private static readonly findQuality = async (episode: CrunchyrollEpisode, quality?: number, stream?: string) => {
       if (!quality) quality = 1080
       const found: any[] = []
-      for (let i = 0; i < episode.stream_data.streams.length; i++) {
-        const stream = episode.stream_data.streams[i].url
-        const manifest = await axios.get(stream).then((r) => r.data)
+      const streams = stream ? [stream] : episode.stream_data.streams.map((s) => s.url)
+      for (let i = 0; i < streams.length; i++) {
+        const manifest = await axios.get(streams[i]).then((r) => r.data)
         const m3u8 = Util.parsem3u8(manifest)
         let playlist = m3u8.playlists.find((p: any) => p.attributes.RESOLUTION.height === quality)
         if (!playlist && quality >= 720) playlist = m3u8.playlists.find((p: any) => p.attributes.RESOLUTION.height === 720)
@@ -92,7 +115,7 @@ export class Util {
       if (episodeResolvable.hasOwnProperty("url")) {
           episode = episodeResolvable as CrunchyrollEpisode
       } else {
-          episode = await Episode.get(episodeResolvable as string, {preferSub: options.preferSub, preferDub: options.preferDub})
+          episode = await Episode.get(episodeResolvable as string, {preferSub: options.preferSub, preferDub: options.preferDub, language: options.language})
       }
       let format = "mp4"
       if (options.audioOnly) format = "mp3"
@@ -100,7 +123,7 @@ export class Util {
       dest = Util.parseDest(episode, format, dest)
       const folder = path.dirname(dest)
       if (!fs.existsSync(folder)) fs.mkdirSync(folder, {recursive: true})
-      const playlist = await Util.findQuality(episode, options.resolution)
+      const playlist = await Util.findQuality(episode, options.resolution, options.playlist)
       if (!playlist) return Promise.reject("can't download this episode (is it premium only?)")
       const resolution = playlist.attributes.RESOLUTION.height
       if (options.skipConversion) return playlist.uri as string
