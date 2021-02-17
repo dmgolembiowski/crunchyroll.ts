@@ -4,6 +4,7 @@ import crunchyroll from "./crunchyroll"
     const progress = (progress) => {
         if (progress.percent > 10) return "stop"
     }
-    const output = await crunchyroll.episode.get("gabriel dropout 2", {preferDub: true, language: "jaJP"})
+    const anime = await  crunchyroll.anime.get("272199")
+    const output = await crunchyroll.anime.episodes(anime, {preferSub: true})
     console.log(output)
 })()

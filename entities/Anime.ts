@@ -64,9 +64,10 @@ export class Anime {
         let anime = null as unknown as CrunchyrollSeason
         if (animeResolvable.hasOwnProperty("collection_id")) {
             params.collection_id = (animeResolvable as CrunchyrollSeason).collection_id
-            params.series_id = undefined
+            anime = animeResolvable as CrunchyrollSeason
         } else if (animeResolvable.hasOwnProperty("series_id")) {
-            params.series_id = (animeResolvable as CrunchyrollAnime).series_id
+            const season = await Season.get((animeResolvable as CrunchyrollAnime), options)
+            params.collection_id = season.collection_id
             anime = animeResolvable as CrunchyrollSeason
         } else {
             let name = animeResolvable as string
