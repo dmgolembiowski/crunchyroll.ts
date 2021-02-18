@@ -24,7 +24,9 @@ export interface DownloadOptions {
   preferDub?: boolean
   ffmpegPath?: string
   ffprobePath?: string
+  softSubs?: boolean
   playlist?: string
+  subtitles?: string
   language?: Language
 }
 

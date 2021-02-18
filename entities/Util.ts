@@ -121,6 +121,7 @@ export class Util {
       let format = "mp4"
       if (options.audioOnly) format = "mp3"
       if (options.skipConversion) format = "m3u8"
+      if (options.softSubs) format = "mkv"
       dest = Util.parseDest(episode, format, dest)
       const folder = path.dirname(dest)
       if (!fs.existsSync(folder)) fs.mkdirSync(folder, {recursive: true})
@@ -133,6 +134,7 @@ export class Util {
       if (options.audioOnly) ffmpegArgs = []
       const video = ffmpeg()
       const input = video.input(uri)
+      if (options.softSubs && options.subtitles) video.input(options.subtitles)
       const info = await input.probe()
       video.output(dest).args(...ffmpegArgs)
       const process = await video.spawn()
