@@ -1,12 +1,15 @@
 import axios from "axios"
-import datauri from "datauri"
+import child_process from "child_process"
 import {ffmpeg, setFFmpegPath, setFFprobePath} from "eloquent-ffmpeg"
 import fs from "fs"
 import path from "path"
+import util from "util"
 import which from "which"
 import {CrunchyrollAnime, CrunchyrollEpisode, CrunchyrollSeason, DownloadOptions, FFmpegProgress} from "../types"
 import {Anime} from "./Anime"
 import {Episode} from "./Episode"
+
+const exec = util.promisify(child_process.exec)
 export class Util {
     private static readonly parsem3u8 = (manifest: any) => {
       const m3u8Parser = require("m3u8-parser")
@@ -16,22 +19,12 @@ export class Util {
       return parser.manifest
     }
 
-    public static parseDuration = async (dest: string, options?: {ffmpegPath?: string, ffprobePath?: string}) => {
-      if (!options) options = {}
-      if (options.ffmpegPath) {
-        setFFmpegPath(options.ffmpegPath)
-      } else {
-        setFFmpegPath(which.sync("ffmpeg"))
-      }
-      if (options.ffprobePath) {
-        setFFprobePath(options.ffprobePath)
-      } else {
-        setFFprobePath(which.sync("ffprobe"))
-      }
-      const video = ffmpeg()
-      const input = video.input(dest)
-      const duration = await input.probe().then((i) => i.duration)
-      return duration
+    public static parseDuration = async (file: string, ffmpegPath?: string) => {
+      const command = `"${ffmpegPath ? ffmpegPath : "ffmpeg"}" -i "${file}"`
+      const str = await exec(command).then((s: any) => s.stdout).catch((e: any) => e.stderr)
+      const tim =  str.match(/(?<=Duration: )(.*?)(?=,)/)?.[0].split(":").map((n: string) => Number(n))
+      if (!tim) return 0
+      return (tim[0] * 60 * 60) + (tim[1] * 60) + tim[2]
     }
 
     public static formatMS = (ms: number) => {
