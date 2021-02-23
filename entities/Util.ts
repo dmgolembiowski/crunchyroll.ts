@@ -1,4 +1,5 @@
 import axios from "axios"
+import datauri from "datauri"
 import {ffmpeg, setFFmpegPath, setFFprobePath} from "eloquent-ffmpeg"
 import fs from "fs"
 import path from "path"
@@ -13,6 +14,24 @@ export class Util {
       parser.push(manifest)
       parser.end()
       return parser.manifest
+    }
+
+    public static parseDuration = async (dest: string, options?: {ffmpegPath?: string, ffprobePath?: string}) => {
+      if (!options) options = {}
+      if (options.ffmpegPath) {
+        setFFmpegPath(options.ffmpegPath)
+      } else {
+        setFFmpegPath(which.sync("ffmpeg"))
+      }
+      if (options.ffprobePath) {
+        setFFprobePath(options.ffprobePath)
+      } else {
+        setFFprobePath(which.sync("ffprobe"))
+      }
+      const video = ffmpeg()
+      const input = video.input(dest)
+      const duration = await input.probe().then((i) => i.duration)
+      return duration
     }
 
     public static formatMS = (ms: number) => {
@@ -57,6 +76,7 @@ export class Util {
       if (locale === "ruRU") return "Russian"
       if (locale === "ptBR") return "Portuguese"
       if (locale === "ptPT") return "Portuguese"
+      if (locale === "arME") return "Arabic"
       if (locale.toLowerCase() === "japanese") return "jaJP"
       if (locale.toLowerCase() === "english") return "enUS"
       if (locale.toLowerCase() === "spanish") return "esES"
@@ -65,6 +85,7 @@ export class Util {
       if (locale.toLowerCase() === "italian") return "itIT"
       if (locale.toLowerCase() === "russian") return "ruRU"
       if (locale.toLowerCase() === "portuguese") return "ptPT"
+      if (locale.toLowerCase() === "arabic") return "arME"
       return "None"
     }
 

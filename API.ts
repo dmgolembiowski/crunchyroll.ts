@@ -2,6 +2,7 @@ import axios from "axios"
 import * as uuid from "uuid"
 
 const baseUrl = "https://api.crunchyroll.com/"
+const mangaUrl = "https://api-manga.crunchyroll.com/"
 
 export default class API {
     private static readonly headers = {"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36"}
@@ -32,6 +33,11 @@ export default class API {
 
     public static get = async (path: string, params?: any) => {
         const url = `${baseUrl}${path}.0.json`
+        return axios.get(url, {headers: API.headers, params: {...params, session_id: await API.session(), locale: "enUS"}}).then((r) => r.data)
+    }
+
+    public static getManga = async (path: string, params?: any) => {
+        const url = `${mangaUrl}${path}`
         return axios.get(url, {headers: API.headers, params: {...params, session_id: await API.session(), locale: "enUS"}}).then((r) => r.data)
     }
 
