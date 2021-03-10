@@ -1,6 +1,6 @@
 {
   "name": "crunchyroll.ts",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "A crunchyroll api/downloader in Node.js.",
   "main": "dist/crunchyroll.js",
   "types": "dist/crunchyroll.d.ts",

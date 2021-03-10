@@ -9,6 +9,6 @@ import crunchyroll from "./crunchyroll"
     // const output = await crunchyroll.api.getManga("list_chapter", {page_id: 372172, series_id: 527})
     // const pages = output.pages.map((p) => p.image_url)
     // console.log(pages)
-    const result = await crunchyroll.util.downloadEpisode("gabriel dropout 1", "./videos", {ffprobePath: "ffprobe"}, progress)
+    const result = await crunchyroll.util.downloadEpisode("gabriel dropout 1", "./videos", {}, progress)
     console.log(result)
 })()

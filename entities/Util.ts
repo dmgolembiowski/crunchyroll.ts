@@ -34,7 +34,8 @@ export class Util {
       const str = await exec(command).then((s: any) => s.stdout).catch((e: any) => e.stderr)
       const tim =  str.match(/(?<=Duration: )(.*?)(?=,)/)?.[0].split(":").map((n: string) => Number(n))
       if (!tim) return 0
-      return (tim[0] * 60 * 60) + (tim[1] * 60) + tim[2]
+      const duration = (tim[0] * 60 * 60) + (tim[1] * 60) + tim[2]
+      return duration * 1000
     }
 
     public static formatMS = (ms: number) => {
@@ -147,16 +148,16 @@ export class Util {
       let ffmpegArgs = ["-acodec", "copy", "-vcodec", "copy", "-crf", `${options?.quality || 16}`, "-pix_fmt", "yuv420p", "-movflags", "+faststart"]
       if (options.audioOnly) ffmpegArgs = []
       const video = ffmpeg()
-      const input = video.input(uri)
+      video.input(uri)
       if (options.softSubs && options.subtitles) video.input(options.subtitles)
-      const info = await input.probe({ffprobePath: options.ffprobePath})
+      const duration = await Util.parseDuration(uri, options.ffmpegPath)
       video.output(dest).args(...ffmpegArgs)
       const process = await video.spawn({ffmpegPath: options.ffmpegPath})
       let killed = false
       if (videoProgress) {
         for await (const progress of process.progress()) {
-          const percent = progress.time / info.duration * 100
-          const result = videoProgress({...progress, percent, resolution, duration: info.duration}, () => process.resume())
+          const percent = (progress.time / duration) * 100
+          const result = videoProgress({...progress, percent, resolution, duration}, () => process.resume())
           if (result === "pause") {
             process.pause()
           } else if (result === "kill") {
