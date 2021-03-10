@@ -22,9 +22,9 @@ export class Util {
       if (!template) template = `{seasonTitle} {episodeNumber}`
       const resolution = playlist ? (playlist.attributes?.RESOLUTION.height ?? 720) : ""
       return template
-      .replace(/{seriesTitle}/gi, episode.series_name.replace(/-/g, " ").replace(/[<>:"|?*.]/g, ""))
-      .replace(/{seasonTitle}/gi, episode.collection_name.replace(/-/g, " ").replace(/[<>:"|?*.]/g, ""))
-      .replace(/{episodeTitle}/gi, episode.name.replace(/-/g, " ").replace(/[<>:"|?*.]/g, ""))
+      .replace(/{seriesTitle}/gi, episode.series_name?.replace(/-/g, " ").replace(/[<>:"|?*.]/g, ""))
+      .replace(/{seasonTitle}/gi, episode.collection_name?.replace(/-/g, " ").replace(/[<>:"|?*.]/g, ""))
+      .replace(/{episodeTitle}/gi, episode.name?.replace(/-/g, " ").replace(/[<>:"|?*.]/g, ""))
       .replace(/{episodeNumber}/gi, episode.episode_number)
       .replace(/{resolution}/gi, resolution)
     }
