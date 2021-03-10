@@ -149,7 +149,7 @@ export class Util {
       const video = ffmpeg()
       const input = video.input(uri)
       if (options.softSubs && options.subtitles) video.input(options.subtitles)
-      const info = await input.probe({ffprobePath: options.ffprobePath, spawnOptions: {ffmpegPath: options.ffmpegPath}})
+      const info = await input.probe({ffprobePath: options.ffprobePath})
       video.output(dest).args(...ffmpegArgs)
       const process = await video.spawn({ffmpegPath: options.ffmpegPath})
       let killed = false
