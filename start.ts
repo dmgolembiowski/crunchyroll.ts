@@ -5,6 +5,7 @@ import crunchyroll from "./crunchyroll"
     // const output = await crunchyroll.api.getManga("list_chapter", {page_id: 372172, series_id: 527})
     // const pages = output.pages.map((p) => p.image_url)
     // console.log(pages)
-    const result = await crunchyroll.util.parseDuration("F:/Downloads/Anime AzurLane Slow Ahead! 1.mp4")
+    const episode = await crunchyroll.episode.get("gabriel dropout 1")
+    const result = crunchyroll.util.parseDest(episode, "mp4", "./videos", "{episodeTitle}")
     console.log(result)
 })()

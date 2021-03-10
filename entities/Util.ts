@@ -1,10 +1,9 @@
 import axios from "axios"
 import child_process from "child_process"
-import {ffmpeg, setFFmpegPath, setFFprobePath} from "eloquent-ffmpeg"
+import {ffmpeg} from "eloquent-ffmpeg"
 import fs from "fs"
 import path from "path"
 import util from "util"
-import which from "which"
 import {CrunchyrollAnime, CrunchyrollEpisode, CrunchyrollSeason, DownloadOptions, FFmpegProgress} from "../types"
 import {Anime} from "./Anime"
 import {Episode} from "./Episode"
@@ -17,6 +16,17 @@ export class Util {
       parser.push(manifest)
       parser.end()
       return parser.manifest
+    }
+
+    private static readonly parseTemplate = (episode: CrunchyrollEpisode, template?: string, playlist?: any) => {
+      if (!template) template = `{seasonTitle} {episodeNumber}`
+      const resolution = playlist ? (playlist.attributes?.RESOLUTION.height ?? 720) : ""
+      return template
+      .replace(/{seriesTitle}/gi, episode.series_name.replace(/-/g, " ").replace(/[<>:"|?*]/g, ""))
+      .replace(/{seasonTitle}/gi, episode.collection_name.replace(/-/g, " ").replace(/[<>:"|?*]/g, ""))
+      .replace(/{episodeTitle}/gi, episode.name.replace(/-/g, " ").replace(/[<>:"|?*]/g, ""))
+      .replace(/{episodeNumber}/gi, episode.episode_number)
+      .replace(/{resolution}/gi, resolution)
     }
 
     public static parseDuration = async (file: string, ffmpegPath?: string) => {
@@ -101,31 +111,21 @@ export class Util {
       return found.reduce((prev, curr) => curr.attributes.RESOLUTION.height > prev.attributes.RESOLUTION.height ? curr : prev)
     }
 
-    public static parseDest = (episode: CrunchyrollEpisode, format: string, dest?: string) => {
+    public static parseDest = (episode: CrunchyrollEpisode, format: string, dest?: string, template?: string, playlist?: any) => {
       if (!dest) dest = "./"
       if (!path.isAbsolute(dest)) {
         const local = __dirname.includes("node_modules") ? path.join(__dirname, "../../../../") : path.join(__dirname, "../../")
         dest = path.join(local, dest)
       }
       if (format === "png") {
-        return `${dest}/${episode.collection_name.replace(/-/g, " ").replace(/:/g, "")} ${episode.episode_number}`
+        return `${dest}/${Util.parseTemplate(episode, template, playlist)}`
       }
-      if (!path.extname(dest)) dest += `/${episode.collection_name.replace(/-/g, " ").replace(/:/g, "")} ${episode.episode_number}.${format}`
+      if (!path.extname(dest)) dest += `/${Util.parseTemplate(episode, template, playlist)}.${format}`
       return dest
     }
 
     public static downloadEpisode = async (episodeResolvable: string | CrunchyrollEpisode, dest?: string, options?: DownloadOptions, videoProgress?: (progress: FFmpegProgress, resume: () => any) => void | "pause" | "stop" | "kill") => {
       if (!options) options = {}
-      if (options.ffmpegPath) {
-        setFFmpegPath(options.ffmpegPath)
-      } else {
-        setFFmpegPath(which.sync("ffmpeg"))
-      }
-      if (options.ffprobePath) {
-        setFFprobePath(options.ffprobePath)
-      } else {
-        setFFprobePath(which.sync("ffprobe"))
-      }
       let episode = null as CrunchyrollEpisode | null
       if (episodeResolvable.hasOwnProperty("url")) {
           episode = episodeResolvable as CrunchyrollEpisode
@@ -136,22 +136,22 @@ export class Util {
       if (options.audioOnly) format = "mp3"
       if (options.skipConversion) format = "m3u8"
       if (options.softSubs) format = "mkv"
-      dest = Util.parseDest(episode, format, dest)
-      const folder = path.dirname(dest)
-      if (!fs.existsSync(folder)) fs.mkdirSync(folder, {recursive: true})
       const playlist = await Util.findQuality(episode, options.resolution, options.playlist)
       if (!playlist) return Promise.reject("can't download this episode (is it premium only?)")
       const uri = playlist.uri ? playlist.uri : options.playlist
       const resolution = playlist.attributes?.RESOLUTION.height ?? 720
+      dest = Util.parseDest(episode, format, dest, options.template, playlist)
+      const folder = path.dirname(dest)
+      if (!fs.existsSync(folder)) fs.mkdirSync(folder, {recursive: true})
       if (options.skipConversion) return uri as string
       let ffmpegArgs = ["-acodec", "copy", "-vcodec", "copy", "-crf", `${options?.quality || 16}`, "-pix_fmt", "yuv420p", "-movflags", "+faststart"]
       if (options.audioOnly) ffmpegArgs = []
       const video = ffmpeg()
       const input = video.input(uri)
       if (options.softSubs && options.subtitles) video.input(options.subtitles)
-      const info = await input.probe()
+      const info = await input.probe({ffprobePath: options.ffprobePath})
       video.output(dest).args(...ffmpegArgs)
-      const process = await video.spawn()
+      const process = await video.spawn({ffmpegPath: options.ffmpegPath})
       let killed = false
       if (videoProgress) {
         for await (const progress of process.progress()) {
@@ -192,25 +192,20 @@ export class Util {
       return resultArray
     }
 
-    public static downloadThumbnails = async (episodeResolvable: string | CrunchyrollEpisode, dest?: string, options?: {ffmpegPath?: string}) => {
+    public static downloadThumbnails = async (episodeResolvable: string | CrunchyrollEpisode, dest?: string, options?: {ffmpegPath?: string, template?: string}) => {
       if (!options) options = {}
-      if (options.ffmpegPath) {
-        setFFmpegPath(options.ffmpegPath)
-      } else {
-        setFFmpegPath(which.sync("ffmpeg"))
-      }
       let episode = null as unknown as CrunchyrollEpisode
       if (episodeResolvable.hasOwnProperty("url")) {
           episode = episodeResolvable as CrunchyrollEpisode
       } else {
           episode = await Episode.get(episodeResolvable as string)
       }
-      const folder = Util.parseDest(episode, "png", dest)
+      const folder = Util.parseDest(episode, "png", dest, options.template)
       if (!fs.existsSync(folder)) fs.mkdirSync(folder, {recursive: true})
       const video = ffmpeg()
       video.input(episode.bif_url)
       video.output(`${folder}/thumb%d.png`)
-      const process = await video.spawn()
+      const process = await video.spawn({ffmpegPath: options.ffmpegPath})
       await process.complete()
       return folder as string
     }

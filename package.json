@@ -1,6 +1,6 @@
 {
   "name": "crunchyroll.ts",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "A crunchyroll api/downloader in Node.js.",
   "main": "dist/crunchyroll.js",
   "types": "dist/crunchyroll.d.ts",
@@ -35,11 +35,10 @@
   },
   "dependencies": {
     "axios": "^0.21.1",
-    "eloquent-ffmpeg": "^0.13.0-alpha.0",
+    "eloquent-ffmpeg": "^0.14.0",
     "form-data": "^3.0.0",
     "m3u8-parser": "^4.5.2",
     "ntsuspend": "^1.0.0",
-    "uuid": "^8.3.2",
-    "which": "^2.0.2"
+    "uuid": "^8.3.2"
   }
 }

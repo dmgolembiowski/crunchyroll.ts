@@ -28,6 +28,7 @@ export interface DownloadOptions {
   playlist?: string
   subtitles?: string
   language?: Language
+  template?: string
 }
 
 export interface FFmpegProgress {
