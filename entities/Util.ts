@@ -1,9 +1,10 @@
 import axios from "axios"
 import child_process from "child_process"
-import {ffmpeg} from "eloquent-ffmpeg"
+import {ffmpeg, setFFmpegPath} from "eloquent-ffmpeg"
 import fs from "fs"
 import path from "path"
 import util from "util"
+import which from "which"
 import {CrunchyrollAnime, CrunchyrollEpisode, CrunchyrollSeason, DownloadOptions, FFmpegProgress} from "../types"
 import {Anime} from "./Anime"
 import {Episode} from "./Episode"
@@ -127,6 +128,11 @@ export class Util {
 
     public static downloadEpisode = async (episodeResolvable: string | CrunchyrollEpisode, dest?: string, options?: DownloadOptions, videoProgress?: (progress: FFmpegProgress, resume: () => any) => void | "pause" | "stop" | "kill") => {
       if (!options) options = {}
+      if (options.ffmpegPath) {
+        setFFmpegPath(options.ffmpegPath)
+      } else {
+        setFFmpegPath(which.sync("ffmpeg"))
+      }
       let episode = null as CrunchyrollEpisode | null
       if (episodeResolvable.hasOwnProperty("url")) {
           episode = episodeResolvable as CrunchyrollEpisode
@@ -152,7 +158,7 @@ export class Util {
       if (options.softSubs && options.subtitles) video.input(options.subtitles)
       const duration = await Util.parseDuration(uri, options.ffmpegPath)
       video.output(dest).args(...ffmpegArgs)
-      const process = await video.spawn({ffmpegPath: options.ffmpegPath})
+      const process = await video.spawn()
       let killed = false
       if (videoProgress) {
         for await (const progress of process.progress()) {
@@ -195,6 +201,11 @@ export class Util {
 
     public static downloadThumbnails = async (episodeResolvable: string | CrunchyrollEpisode, dest?: string, options?: {ffmpegPath?: string, template?: string}) => {
       if (!options) options = {}
+      if (options.ffmpegPath) {
+        setFFmpegPath(options.ffmpegPath)
+      } else {
+        setFFmpegPath(which.sync("ffmpeg"))
+      }
       let episode = null as unknown as CrunchyrollEpisode
       if (episodeResolvable.hasOwnProperty("url")) {
           episode = episodeResolvable as CrunchyrollEpisode
@@ -206,7 +217,7 @@ export class Util {
       const video = ffmpeg()
       video.input(episode.bif_url)
       video.output(`${folder}/thumb%d.png`)
-      const process = await video.spawn({ffmpegPath: options.ffmpegPath})
+      const process = await video.spawn()
       await process.complete()
       return folder as string
     }

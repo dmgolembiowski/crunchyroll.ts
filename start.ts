@@ -4,7 +4,7 @@ import crunchyroll from "./crunchyroll"
 (async () => {
     const progress = (progress) => {
         console.log(progress.percent)
-        if (progress.percent > 2) return "stop"
+        // if (progress.percent > 2) return "stop"
     }
     // const output = await crunchyroll.api.getManga("list_chapter", {page_id: 372172, series_id: 527})
     // const pages = output.pages.map((p) => p.image_url)
