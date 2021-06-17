@@ -38,7 +38,7 @@
     "eloquent-ffmpeg": "^0.13.0-alpha.0",
     "form-data": "^3.0.0",
     "m3u8-parser": "^4.5.2",
-    "ntsuspend": "^1.0.1",
+    "ts-mocha": "^8.0.0",
     "uuid": "^8.3.2",
     "which": "^2.0.2"
   }
